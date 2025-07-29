@@ -2,6 +2,7 @@ package mrquackduck.messagesonhead.classes;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import mrquackduck.messagesonhead.configuration.Configuration;
+import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.utils.ColorUtils;
 import mrquackduck.messagesonhead.utils.EntityUtils;
 import mrquackduck.messagesonhead.utils.StringUtils;
@@ -13,7 +14,6 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.entity.*;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
@@ -22,14 +22,14 @@ import java.util.*;
  * Represents a stack of displayed messages above player's head
  */
 public class MessageStack {
-    private final JavaPlugin plugin;
+    private final MessagesOnHeadPlugin plugin;
     private final Configuration config;
     private final Player player;
     private final List<Entity> entities = new ArrayList<>();
     private final List<DisplayedMessage> displayedMessages = new ArrayList<>();
     public static final String customEntityTag = "moh-entity";
 
-    public MessageStack(Player player, JavaPlugin plugin) {
+    public MessageStack(Player player, MessagesOnHeadPlugin plugin) {
         this.plugin = plugin;
         this.config = new Configuration(plugin);
         this.player = player;
@@ -226,14 +226,14 @@ public class MessageStack {
     }
 
     private void hideFromToggledOffViewers(Entity entity) {
-        if (plugin instanceof MessagesOnHeadPlugin) {
-            ToggleManager toggleManager = ((MessagesOnHeadPlugin) plugin).getToggleManager();
-            if (toggleManager != null) {
-                for (UUID uuid : toggleManager.getToggledOffOnline()) {
-                    if (!config.visibleToSender() && uuid.equals(player.getUniqueId())) continue;
-                    Player viewer = Bukkit.getPlayer(uuid);
-                    if (viewer != null) viewer.hideEntity(plugin, entity);
-                }
+        ToggleManager toggleManager = plugin.getToggleManager();
+        if (toggleManager != null) {
+            for (UUID uuid : toggleManager.getToggledOffOnline()) {
+                Player viewer = Bukkit.getPlayer(uuid);
+                if (viewer == null) continue;
+
+                if (!viewer.hasPermission(Permissions.TOGGLE)) continue;
+                viewer.hideEntity(plugin, entity);
             }
         }
     }

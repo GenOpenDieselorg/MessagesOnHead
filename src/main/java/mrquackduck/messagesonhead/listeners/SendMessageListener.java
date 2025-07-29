@@ -1,7 +1,7 @@
 package mrquackduck.messagesonhead.listeners;
 
 import io.papermc.paper.event.player.ChatEvent;
-import mrquackduck.messagesonhead.classes.MessageStackRepository;
+import mrquackduck.messagesonhead.services.MessageStackRepository;
 import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.utils.ColorUtils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;

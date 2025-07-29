@@ -1,10 +1,11 @@
-package mrquackduck.messagesonhead.classes;
+package mrquackduck.messagesonhead.services;
 
+import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
+import mrquackduck.messagesonhead.classes.MessageStack;
 import mrquackduck.messagesonhead.utils.EntityUtils;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -12,10 +13,10 @@ import java.util.UUID;
 import static mrquackduck.messagesonhead.classes.MessageStack.customEntityTag;
 
 public class MessageStackRepository {
-    private final JavaPlugin plugin;
+    private final MessagesOnHeadPlugin plugin;
     private final HashMap<UUID, MessageStack> playersStacks = new HashMap<>();
 
-    public MessageStackRepository(JavaPlugin plugin) {
+    public MessageStackRepository(MessagesOnHeadPlugin plugin) {
         this.plugin = plugin;
     }
 

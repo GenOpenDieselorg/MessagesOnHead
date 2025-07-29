@@ -1,7 +1,7 @@
 package mrquackduck.messagesonhead;
 
 import com.tchristofferson.configupdater.ConfigUpdater;
-import mrquackduck.messagesonhead.classes.MessageStackRepository;
+import mrquackduck.messagesonhead.services.MessageStackRepository;
 import mrquackduck.messagesonhead.commands.MohCommand;
 import mrquackduck.messagesonhead.listeners.PlayerConnectionListener;
 import mrquackduck.messagesonhead.listeners.SendMessageListener;

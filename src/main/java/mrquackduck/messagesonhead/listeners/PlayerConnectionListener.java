@@ -1,7 +1,7 @@
 package mrquackduck.messagesonhead.listeners;
 
 import mrquackduck.messagesonhead.services.ToggleManager;
-import mrquackduck.messagesonhead.classes.MessageStackRepository;
+import mrquackduck.messagesonhead.services.MessageStackRepository;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;

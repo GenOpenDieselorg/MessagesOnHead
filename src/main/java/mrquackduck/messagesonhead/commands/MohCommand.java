@@ -3,7 +3,7 @@ package mrquackduck.messagesonhead.commands;
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
 import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.services.ToggleManager;
-import mrquackduck.messagesonhead.classes.MessageStackRepository;
+import mrquackduck.messagesonhead.services.MessageStackRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -39,7 +39,7 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         else if (args[0].equalsIgnoreCase("reload") && commandSender.hasPermission(Permissions.ADMIN)) {
             return new ReloadCommand(plugin).onCommand(commandSender, command, s, args);
         }
-        else if (args[0].equalsIgnoreCase("toggle")) {
+        else if (args[0].equalsIgnoreCase("toggle") && commandSender.hasPermission(Permissions.TOGGLE)) {
             return new ToggleCommand(toggleManager).onCommand(commandSender, command, s, args);
         }
 
@@ -59,7 +59,10 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length != 1) return completions;
 
-        options.add("toggle");
+        if (commandSender.hasPermission(Permissions.TOGGLE)) {
+            options.add("toggle");
+        }
+
         if (commandSender.hasPermission(Permissions.ADMIN)) {
             options.add("reload");
             options.add("info");
