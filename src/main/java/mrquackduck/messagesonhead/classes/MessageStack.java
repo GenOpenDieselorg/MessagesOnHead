@@ -6,7 +6,7 @@ import mrquackduck.messagesonhead.utils.ColorUtils;
 import mrquackduck.messagesonhead.utils.EntityUtils;
 import mrquackduck.messagesonhead.utils.StringUtils;
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
-import mrquackduck.messagesonhead.ToggleManager;
+import mrquackduck.messagesonhead.services.ToggleManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;

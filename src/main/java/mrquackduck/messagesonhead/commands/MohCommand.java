@@ -1,7 +1,7 @@
 package mrquackduck.messagesonhead.commands;
 
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
-import mrquackduck.messagesonhead.ToggleManager;
+import mrquackduck.messagesonhead.services.ToggleManager;
 import mrquackduck.messagesonhead.classes.MessageStackRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;

@@ -5,6 +5,7 @@ import mrquackduck.messagesonhead.classes.MessageStackRepository;
 import mrquackduck.messagesonhead.commands.MohCommand;
 import mrquackduck.messagesonhead.listeners.PlayerConnectionListener;
 import mrquackduck.messagesonhead.listeners.SendMessageListener;
+import mrquackduck.messagesonhead.services.ToggleManager;
 import mrquackduck.messagesonhead.utils.MessageColorizer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;

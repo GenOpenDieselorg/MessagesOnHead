@@ -1,4 +1,4 @@
-package mrquackduck.messagesonhead;
+package mrquackduck.messagesonhead.services;
 
 import org.bukkit.entity.Player;
 
