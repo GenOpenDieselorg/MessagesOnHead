@@ -2,16 +2,18 @@ package mrquackduck.messagesonhead.classes;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import mrquackduck.messagesonhead.configuration.Configuration;
+import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.utils.ColorUtils;
 import mrquackduck.messagesonhead.utils.EntityUtils;
 import mrquackduck.messagesonhead.utils.StringUtils;
+import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
+import mrquackduck.messagesonhead.services.ToggleManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.entity.*;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
@@ -20,21 +22,23 @@ import java.util.*;
  * Represents a stack of displayed messages above player's head
  */
 public class MessageStack {
-    private final JavaPlugin plugin;
+    private final MessagesOnHeadPlugin plugin;
     private final Configuration config;
+    private final ToggleManager toggleManager;
     private final Player player;
     private final List<Entity> entities = new ArrayList<>();
     private final List<DisplayedMessage> displayedMessages = new ArrayList<>();
     public static final String customEntityTag = "moh-entity";
 
-    public MessageStack(Player player, JavaPlugin plugin) {
+    public MessageStack(Player player, MessagesOnHeadPlugin plugin, ToggleManager toggleManager) {
+        this.player = player;
         this.plugin = plugin;
         this.config = new Configuration(plugin);
-        this.player = player;
-        findExistingStackEntities();
+        this.toggleManager = toggleManager;
+        scaffoldExistingStackEntities();
     }
 
-    private void findExistingStackEntities() {
+    private void scaffoldExistingStackEntities() {
         Entity currentEntity = player;
         while (!currentEntity.getPassengers().isEmpty()) {
             var passengers = currentEntity.getPassengers();
@@ -150,6 +154,8 @@ public class MessageStack {
         textDisplay.setLineWidth(Integer.MAX_VALUE);
         textDisplay.addScoreboardTag(customEntityTag);
 
+        hideFromToggledOffViewers(textDisplay);
+
         var textToBeDisplayed = Component.text(text).color(TextColor.fromHexString(config.textColor()));
         if (config.isPlaceholderApiIntegrationEnabled()) {
             text = config.lineFormat()
@@ -216,7 +222,21 @@ public class MessageStack {
         entity.setGravity(false);
         entity.addScoreboardTag(customEntityTag);
 
+        hideFromToggledOffViewers(entity);
+
         return entity;
+    }
+
+    private void hideFromToggledOffViewers(Entity entity) {
+        if (toggleManager != null) {
+            for (UUID uuid : toggleManager.getToggledOffOnline()) {
+                Player viewer = Bukkit.getPlayer(uuid);
+                if (viewer == null) continue;
+
+                if (!viewer.hasPermission(Permissions.TOGGLE)) continue;
+                viewer.hideEntity(plugin, entity);
+            }
+        }
     }
 
     private double calculateTimeForMessageToExist(String message) {

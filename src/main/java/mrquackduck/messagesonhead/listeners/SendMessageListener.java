@@ -1,7 +1,8 @@
 package mrquackduck.messagesonhead.listeners;
 
 import io.papermc.paper.event.player.ChatEvent;
-import mrquackduck.messagesonhead.classes.MessageStackRepository;
+import mrquackduck.messagesonhead.services.MessageStackRepository;
+import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.utils.ColorUtils;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.GameMode;
@@ -21,7 +22,7 @@ public class SendMessageListener implements Listener {
     public void onMessageSent(ChatEvent event) {
         Player player = event.getPlayer();
 
-        if (!player.hasPermission("messagesonhead.show")) return;
+        if (!player.hasPermission(Permissions.SHOW)) return;
         if (player.getGameMode() == GameMode.SPECTATOR) return;
 
         var messageStack = messageStackRepository.getMessageStack(player);

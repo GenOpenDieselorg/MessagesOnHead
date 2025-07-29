@@ -3,9 +3,9 @@ package mrquackduck.messagesonhead.configuration;
 import org.bukkit.entity.Display;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class Configuration extends ConfigurationBase {
+public class Configuration extends MessageConfigurationBase {
     public Configuration(JavaPlugin plugin) {
-        super(plugin);
+        super(plugin, "messages");
     }
 
     public int symbolsPerLine() {

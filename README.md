@@ -20,18 +20,20 @@ The plugin's functionality is based on the [Text Display](https://minecraft.wiki
 - **Time scaling**: you can make longer messages exist for more time.
 - **Colors and style**: you can choose the color of the text, its background, whether the text is shadowed and the color for the timer.
 - **Rotation**: you may configure how a text display will rotate in the `pivotAxis` field.
-- **Visibility**: you may hide messages from their sender via the `visibleToSender` field as well as choose whose messages will be shown globally using the `messagesonhead.show` permission.
+- **Visibility**: you may hide messages from their sender via the `visibleToSender` field as well as choose whose messages will be shown globally using the `messagesonhead.show` permission. It's also possible to toggle visibility via the `/moh toggle` command.
 - **Adjustable gaps**: you may configure gaps between messages and above player's head in `gapBetweenMessages` and `gapAboveHead` fields.
 - **PlaceholderAPI support**: you can configure a placeholder that will color your text displays.
 
 ### 🔞 Permissions
 
 - `messagesonhead.show` _(**true** by default)_  — Whether messages will appear above player's head.
+- `messagesonhead.toggle` _(**true** by default)_  — Whether players can use the `/moh toggle` command.
 - `messagesonhead.admin` _(for **operators** by default)_ — Allows to use the `/moh` command.
 
 ### 💻 Commands
 
 - `/moh info` — shows commands info.
+- `/moh toggle` — toggles player's ability to see messages of players on their heads.
 - `/moh reload` — reloads the config and makes a cleanup by removing all entities related to the plugin.
 - `/moh say <player> <msg>` — says a message on behalf of the player.
 
@@ -90,11 +92,15 @@ lineFormat: "&[defaultColor]&[colorPlaceholder][message]"
 
 messages:
   "prefix": "&#F4CA16[MessagesOnHead]"
-  "info-content": "<prefix> &#D9E6EDCommands list:
-  \n &f/moh reload - &#D9E6EDReloads the config and makes a cleanup by removing all entities related to the plugin.
-  \n &f/moh say - &#D9E6EDSay a message on behalf of the player."
+  "info-title": "<prefix> &#D9E6EDCommands list:"
+  "info-toggle-command-description": " &f/moh toggle - &#D9E6EDAllows you to toggle the visibility of messages on heads."
+  "info-reload-command-description": " &f/moh reload - &#D9E6EDReloads the config and makes a cleanup by removing all entities related to the plugin."
+  "info-say-command-description": " &f/moh say - &#D9E6EDSay a message on behalf of the player."
   "reloaded": "<prefix> &#D9E6EDReloaded!"
-  "player-not-found": "<prefix> Player not found."
+  "visibility-toggled-on": "<prefix> &#D9E6EDYou will &a&nnow see&#D9E6ED messages over other players' heads."
+  "visibility-toggled-off": "<prefix> &#D9E6EDYou will &c&nno longer see&#D9E6ED messages over other players' heads."
+  "only-players": "<prefix> &cOnly players can use this command!"
+  "player-not-found": "<prefix> &cPlayer not found."
   "command-not-found": "<prefix> &cCommand not found."
   "error-during-reload": "<prefix> &cAn error occurred during reload! Check console for details."
 ```

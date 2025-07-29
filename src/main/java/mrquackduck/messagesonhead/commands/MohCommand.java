@@ -1,7 +1,10 @@
 package mrquackduck.messagesonhead.commands;
 
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
-import mrquackduck.messagesonhead.classes.MessageStackRepository;
+import mrquackduck.messagesonhead.configuration.Configuration;
+import mrquackduck.messagesonhead.configuration.Permissions;
+import mrquackduck.messagesonhead.services.ToggleManager;
+import mrquackduck.messagesonhead.services.MessageStackRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,26 +20,39 @@ import java.util.List;
 
 public class MohCommand implements CommandExecutor, TabCompleter {
     private final MessagesOnHeadPlugin plugin;
+    private final Configuration config;
     private final MessageStackRepository messageStackRepository;
+    private final ToggleManager toggleManager;
 
-    public MohCommand(MessagesOnHeadPlugin plugin, MessageStackRepository messageStackRepository) {
+    public MohCommand(MessagesOnHeadPlugin plugin, Configuration config,
+                      MessageStackRepository messageStackRepository,ToggleManager toggleManager) {
         this.plugin = plugin;
+        this.config = config;
         this.messageStackRepository = messageStackRepository;
+        this.toggleManager = toggleManager;
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
-        if (args.length == 0 || args[0].equalsIgnoreCase("info")) {
-            return new InfoCommand().onCommand(commandSender, command, s, args);
-        }
-        else if (args[0].equalsIgnoreCase("say") && args.length >= 3 && commandSender.hasPermission("messagesonhead.admin")) {
-            return new SayCommand(plugin, messageStackRepository).onCommand(commandSender, command, s, args);
-        }
-        else if (args[0].equalsIgnoreCase("reload") && commandSender.hasPermission("messagesonhead.admin")) {
-            return new ReloadCommand(plugin).onCommand(commandSender, command, s, args);
+        if (!allowedToRunAtLeastOneCommand(commandSender)) {
+            commandSender.sendMessage(config.getMessage("command-not-found"));
+            return true;
         }
 
-        commandSender.sendMessage(MessagesOnHeadPlugin.getMessage("command-not-found"));
+        if (args.length == 0 || args[0].equalsIgnoreCase("info")) {
+            return new InfoCommand(config).onCommand(commandSender, command, s, args);
+        }
+        else if (args[0].equalsIgnoreCase("say") && args.length >= 3 && commandSender.hasPermission(Permissions.ADMIN)) {
+            return new SayCommand(plugin, config, messageStackRepository).onCommand(commandSender, command, s, args);
+        }
+        else if (args[0].equalsIgnoreCase("reload") && commandSender.hasPermission(Permissions.ADMIN)) {
+            return new ReloadCommand(plugin, config).onCommand(commandSender, command, s, args);
+        }
+        else if (args[0].equalsIgnoreCase("toggle") && commandSender.hasPermission(Permissions.TOGGLE)) {
+            return new ToggleCommand(config, toggleManager).onCommand(commandSender, command, s, args);
+        }
+
+        commandSender.sendMessage(config.getMessage("command-not-found"));
         return true;
     }
 
@@ -45,18 +61,32 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         List<String> options = new ArrayList<>();
         List<String> completions = new ArrayList<>();
 
-        if (args.length == 2 && args[0].equals("say") && commandSender.hasPermission("messagesonhead.admin")) {
+        if (args.length == 2 && args[0].equals("say") && commandSender.hasPermission(Permissions.ADMIN)) {
             for (Player p : Bukkit.getOnlinePlayers()) options.add(p.getName());
             StringUtil.copyPartialMatches(args[1], options, completions);
             return completions;
         }
         if (args.length != 1) return completions;
 
-        if (commandSender.hasPermission("messagesonhead.admin")) options.add("reload");
-        if (commandSender.hasPermission("messagesonhead.admin")) options.add("info");
-        if (commandSender.hasPermission("messagesonhead.admin")) options.add("say");
+        if (allowedToRunAtLeastOneCommand(commandSender)) {
+            options.add("info");
+        }
+
+        if (commandSender.hasPermission(Permissions.TOGGLE)) {
+            options.add("toggle");
+        }
+
+        if (commandSender.hasPermission(Permissions.ADMIN)) {
+            options.add("reload");
+            options.add("say");
+        }
 
         StringUtil.copyPartialMatches(args[0], options, completions);
         return completions;
+    }
+
+    private boolean allowedToRunAtLeastOneCommand(CommandSender commandSender) {
+        return commandSender.hasPermission(Permissions.TOGGLE)
+                || commandSender.hasPermission(Permissions.ADMIN);
     }
 }

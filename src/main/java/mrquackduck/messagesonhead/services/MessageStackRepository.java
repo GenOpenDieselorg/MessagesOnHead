@@ -1,10 +1,11 @@
-package mrquackduck.messagesonhead.classes;
+package mrquackduck.messagesonhead.services;
 
+import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
+import mrquackduck.messagesonhead.classes.MessageStack;
 import mrquackduck.messagesonhead.utils.EntityUtils;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -12,18 +13,20 @@ import java.util.UUID;
 import static mrquackduck.messagesonhead.classes.MessageStack.customEntityTag;
 
 public class MessageStackRepository {
-    private final JavaPlugin plugin;
+    private final MessagesOnHeadPlugin plugin;
+    private final ToggleManager toggleManager;
     private final HashMap<UUID, MessageStack> playersStacks = new HashMap<>();
 
-    public MessageStackRepository(JavaPlugin plugin) {
+    public MessageStackRepository(MessagesOnHeadPlugin plugin, ToggleManager toggleManager) {
         this.plugin = plugin;
+        this.toggleManager = toggleManager;
     }
 
     public MessageStack getMessageStack(Player player) {
         var stack = playersStacks.get(player.getUniqueId());
         if (stack != null) return stack;
 
-        stack = new MessageStack(player, plugin);
+        stack = new MessageStack(player, plugin, toggleManager);
         playersStacks.put(player.getUniqueId(), stack);
         return stack;
     }
