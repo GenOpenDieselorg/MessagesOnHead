@@ -3,7 +3,7 @@ package mrquackduck.messagesonhead;
 import com.tchristofferson.configupdater.ConfigUpdater;
 import mrquackduck.messagesonhead.classes.MessageStackRepository;
 import mrquackduck.messagesonhead.commands.MohCommand;
-import mrquackduck.messagesonhead.listeners.LeaveListener;
+import mrquackduck.messagesonhead.listeners.PlayerConnectionListener;
 import mrquackduck.messagesonhead.listeners.SendMessageListener;
 import mrquackduck.messagesonhead.utils.MessageColorizer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -22,6 +22,7 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
     private Logger logger;
     private MessageStackRepository messageStackRepository;
     private static Map<String, String> messages = new HashMap<>();
+    private ToggleManager toggleManager;
 
     @Override
     public void onEnable() {
@@ -30,10 +31,11 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
 
         // Setup message stack repository
         this.messageStackRepository = new MessageStackRepository(this);
+        this.toggleManager = new ToggleManager(getDataFolder());
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new SendMessageListener(messageStackRepository), this);
-        getServer().getPluginManager().registerEvents(new LeaveListener(messageStackRepository), this);
+        getServer().getPluginManager().registerEvents(new PlayerConnectionListener(messageStackRepository, toggleManager), this);
 
         // Starting the plugin
         try { start(); }
@@ -63,11 +65,21 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
 
         // Remove all entities related to the plugin
         messageStackRepository.cleanUp();
+
+        // Load toggled state for all currently online players
+        if (toggleManager != null) {
+            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+                toggleManager.onPlayerJoin(player);
+            }
+        }
     }
 
     public void reload() {
         // Reloading the config
         reloadConfig();
+
+        // Reload toggled-off list from file
+        if (toggleManager != null) toggleManager.reload();
 
         // Starting the plugin again
         start();
@@ -97,5 +109,9 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
         if (messages.get(key) == null) return String.format("Message %s wasn't found", key);
 
         return MessageColorizer.colorize(messages.get(key).replace("<prefix>", messages.get("prefix")));
+    }
+
+    public ToggleManager getToggleManager() {
+        return toggleManager;
     }
 }

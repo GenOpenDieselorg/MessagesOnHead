@@ -1,6 +1,7 @@
 package mrquackduck.messagesonhead.commands;
 
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
+import mrquackduck.messagesonhead.ToggleManager;
 import mrquackduck.messagesonhead.classes.MessageStackRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -18,10 +19,12 @@ import java.util.List;
 public class MohCommand implements CommandExecutor, TabCompleter {
     private final MessagesOnHeadPlugin plugin;
     private final MessageStackRepository messageStackRepository;
+    private final ToggleManager toggleManager;
 
     public MohCommand(MessagesOnHeadPlugin plugin, MessageStackRepository messageStackRepository) {
         this.plugin = plugin;
         this.messageStackRepository = messageStackRepository;
+        this.toggleManager = plugin.getToggleManager();
     }
 
     @Override
@@ -34,6 +37,21 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         }
         else if (args[0].equalsIgnoreCase("reload") && commandSender.hasPermission("messagesonhead.admin")) {
             return new ReloadCommand(plugin).onCommand(commandSender, command, s, args);
+        }
+        else if (args[0].equalsIgnoreCase("toggle")) {
+            if (!(commandSender instanceof Player)) {
+                commandSender.sendMessage("This command can only be used by players.");
+                return true;
+            }
+            Player player = (Player) commandSender;
+            boolean currentlyOff = toggleManager.isToggledOff(player);
+            toggleManager.setToggled(player, !currentlyOff);
+            if (currentlyOff) {
+                player.sendMessage("You will now see messages over other player's heads");
+            } else {
+                player.sendMessage("You will no longer see messages over other player's heads");
+            }
+            return true;
         }
 
         commandSender.sendMessage(MessagesOnHeadPlugin.getMessage("command-not-found"));
@@ -52,9 +70,12 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length != 1) return completions;
 
-        if (commandSender.hasPermission("messagesonhead.admin")) options.add("reload");
-        if (commandSender.hasPermission("messagesonhead.admin")) options.add("info");
-        if (commandSender.hasPermission("messagesonhead.admin")) options.add("say");
+        options.add("toggle");
+        if (commandSender.hasPermission("messagesonhead.admin")) {
+            options.add("reload");
+            options.add("info");
+            options.add("say");
+        }
 
         StringUtil.copyPartialMatches(args[0], options, completions);
         return completions;

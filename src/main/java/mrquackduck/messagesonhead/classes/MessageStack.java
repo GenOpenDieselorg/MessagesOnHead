@@ -5,6 +5,8 @@ import mrquackduck.messagesonhead.configuration.Configuration;
 import mrquackduck.messagesonhead.utils.ColorUtils;
 import mrquackduck.messagesonhead.utils.EntityUtils;
 import mrquackduck.messagesonhead.utils.StringUtils;
+import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
+import mrquackduck.messagesonhead.ToggleManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
@@ -150,6 +152,8 @@ public class MessageStack {
         textDisplay.setLineWidth(Integer.MAX_VALUE);
         textDisplay.addScoreboardTag(customEntityTag);
 
+        hideFromToggledOffViewers(textDisplay);
+
         var textToBeDisplayed = Component.text(text).color(TextColor.fromHexString(config.textColor()));
         if (config.isPlaceholderApiIntegrationEnabled()) {
             text = config.lineFormat()
@@ -216,7 +220,22 @@ public class MessageStack {
         entity.setGravity(false);
         entity.addScoreboardTag(customEntityTag);
 
+        hideFromToggledOffViewers(entity);
+
         return entity;
+    }
+
+    private void hideFromToggledOffViewers(Entity entity) {
+        if (plugin instanceof MessagesOnHeadPlugin) {
+            ToggleManager toggleManager = ((MessagesOnHeadPlugin) plugin).getToggleManager();
+            if (toggleManager != null) {
+                for (UUID uuid : toggleManager.getToggledOffOnline()) {
+                    if (!config.visibleToSender() && uuid.equals(player.getUniqueId())) continue;
+                    Player viewer = Bukkit.getPlayer(uuid);
+                    if (viewer != null) viewer.hideEntity(plugin, entity);
+                }
+            }
+        }
     }
 
     private double calculateTimeForMessageToExist(String message) {
