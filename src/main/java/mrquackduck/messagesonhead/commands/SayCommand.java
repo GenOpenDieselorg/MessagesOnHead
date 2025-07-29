@@ -21,7 +21,7 @@ public class SayCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         Player player = plugin.getServer().getPlayer(args[1]);
         if (player == null) {
-            commandSender.sendMessage(MessagesOnHeadPlugin.getMessage(""));
+            commandSender.sendMessage(MessagesOnHeadPlugin.getMessage("player-not-found"));
             return true;
         }
 
