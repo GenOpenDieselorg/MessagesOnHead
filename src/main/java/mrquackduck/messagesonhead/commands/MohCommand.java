@@ -49,7 +49,7 @@ public class MohCommand implements CommandExecutor, TabCompleter {
             return new ReloadCommand(plugin, config).onCommand(commandSender, command, s, args);
         }
         else if (args[0].equalsIgnoreCase("toggle") && commandSender.hasPermission(Permissions.TOGGLE)) {
-            return new ToggleCommand(toggleManager).onCommand(commandSender, command, s, args);
+            return new ToggleCommand(config, toggleManager).onCommand(commandSender, command, s, args);
         }
 
         commandSender.sendMessage(config.getMessage("command-not-found"));
