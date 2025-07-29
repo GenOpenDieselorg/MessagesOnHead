@@ -1,6 +1,7 @@
 package mrquackduck.messagesonhead.commands;
 
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
+import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.services.ToggleManager;
 import mrquackduck.messagesonhead.classes.MessageStackRepository;
 import org.bukkit.Bukkit;
@@ -32,10 +33,10 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0 || args[0].equalsIgnoreCase("info")) {
             return new InfoCommand().onCommand(commandSender, command, s, args);
         }
-        else if (args[0].equalsIgnoreCase("say") && args.length >= 3 && commandSender.hasPermission("messagesonhead.admin")) {
+        else if (args[0].equalsIgnoreCase("say") && args.length >= 3 && commandSender.hasPermission(Permissions.ADMIN)) {
             return new SayCommand(plugin, messageStackRepository).onCommand(commandSender, command, s, args);
         }
-        else if (args[0].equalsIgnoreCase("reload") && commandSender.hasPermission("messagesonhead.admin")) {
+        else if (args[0].equalsIgnoreCase("reload") && commandSender.hasPermission(Permissions.ADMIN)) {
             return new ReloadCommand(plugin).onCommand(commandSender, command, s, args);
         }
         else if (args[0].equalsIgnoreCase("toggle")) {
@@ -51,7 +52,7 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         List<String> options = new ArrayList<>();
         List<String> completions = new ArrayList<>();
 
-        if (args.length == 2 && args[0].equals("say") && commandSender.hasPermission("messagesonhead.admin")) {
+        if (args.length == 2 && args[0].equals("say") && commandSender.hasPermission(Permissions.ADMIN)) {
             for (Player p : Bukkit.getOnlinePlayers()) options.add(p.getName());
             StringUtil.copyPartialMatches(args[1], options, completions);
             return completions;
@@ -59,7 +60,7 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         if (args.length != 1) return completions;
 
         options.add("toggle");
-        if (commandSender.hasPermission("messagesonhead.admin")) {
+        if (commandSender.hasPermission(Permissions.ADMIN)) {
             options.add("reload");
             options.add("info");
             options.add("say");
