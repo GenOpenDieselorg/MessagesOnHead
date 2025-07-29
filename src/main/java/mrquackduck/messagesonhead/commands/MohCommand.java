@@ -44,11 +44,11 @@ public class MohCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             Player player = (Player) commandSender;
-            boolean currentlyOff = toggleManager.isToggledOff(player);
-            toggleManager.setToggled(player, !currentlyOff);
-            if (currentlyOff) {
+            boolean currentlyOn = toggleManager.toggle(player);
+            if (currentlyOn) {
                 player.sendMessage("You will now see messages over other player's heads");
-            } else {
+            }
+            else {
                 player.sendMessage("You will no longer see messages over other player's heads");
             }
             return true;

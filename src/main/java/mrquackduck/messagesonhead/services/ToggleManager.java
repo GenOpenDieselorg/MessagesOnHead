@@ -48,23 +48,27 @@ public class ToggleManager {
         toggledOffOnline.remove(player.getUniqueId());
     }
 
-    public boolean isToggledOff(Player player) {
+    private boolean isToggledOff(Player player) {
         return toggledOffOnline.contains(player.getUniqueId());
     }
 
-    public void setToggled(Player player, boolean off) {
+    public boolean toggle(Player player) {
         UUID uuid = player.getUniqueId();
-        if (off) {
+
+        boolean hasPlayerToggledOff = isToggledOff(player);
+        if (!hasPlayerToggledOff) {
             toggledOffEveryone.add(uuid);
             toggledOffOnline.add(uuid);
         } else {
             toggledOffEveryone.remove(uuid);
             toggledOffOnline.remove(uuid);
         }
+
         save();
+        return hasPlayerToggledOff;
     }
 
-    public boolean isToggledOffAll(Player player) {
+    private boolean isToggledOffAll(Player player) {
         return toggledOffEveryone.contains(player.getUniqueId());
     }
 
