@@ -33,10 +33,10 @@ public class MessageStack {
         this.plugin = plugin;
         this.config = new Configuration(plugin);
         this.player = player;
-        findExistingStackEntities();
+        scaffoldExistingStackEntities();
     }
 
-    private void findExistingStackEntities() {
+    private void scaffoldExistingStackEntities() {
         Entity currentEntity = player;
         while (!currentEntity.getPassengers().isEmpty()) {
             var passengers = currentEntity.getPassengers();
