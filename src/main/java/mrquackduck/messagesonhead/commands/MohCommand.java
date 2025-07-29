@@ -39,19 +39,7 @@ public class MohCommand implements CommandExecutor, TabCompleter {
             return new ReloadCommand(plugin).onCommand(commandSender, command, s, args);
         }
         else if (args[0].equalsIgnoreCase("toggle")) {
-            if (!(commandSender instanceof Player)) {
-                commandSender.sendMessage("This command can only be used by players.");
-                return true;
-            }
-            Player player = (Player) commandSender;
-            boolean currentlyOn = toggleManager.toggle(player);
-            if (currentlyOn) {
-                player.sendMessage("You will now see messages over other player's heads");
-            }
-            else {
-                player.sendMessage("You will no longer see messages over other player's heads");
-            }
-            return true;
+            return new ToggleCommand(toggleManager).onCommand(commandSender, command, s, args);
         }
 
         commandSender.sendMessage(MessagesOnHeadPlugin.getMessage("command-not-found"));
