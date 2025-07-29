@@ -24,15 +24,17 @@ import java.util.*;
 public class MessageStack {
     private final MessagesOnHeadPlugin plugin;
     private final Configuration config;
+    private final ToggleManager toggleManager;
     private final Player player;
     private final List<Entity> entities = new ArrayList<>();
     private final List<DisplayedMessage> displayedMessages = new ArrayList<>();
     public static final String customEntityTag = "moh-entity";
 
-    public MessageStack(Player player, MessagesOnHeadPlugin plugin) {
+    public MessageStack(Player player, MessagesOnHeadPlugin plugin, ToggleManager toggleManager) {
+        this.player = player;
         this.plugin = plugin;
         this.config = new Configuration(plugin);
-        this.player = player;
+        this.toggleManager = toggleManager;
         scaffoldExistingStackEntities();
     }
 
@@ -226,7 +228,6 @@ public class MessageStack {
     }
 
     private void hideFromToggledOffViewers(Entity entity) {
-        ToggleManager toggleManager = plugin.getToggleManager();
         if (toggleManager != null) {
             for (UUID uuid : toggleManager.getToggledOffOnline()) {
                 Player viewer = Bukkit.getPlayer(uuid);

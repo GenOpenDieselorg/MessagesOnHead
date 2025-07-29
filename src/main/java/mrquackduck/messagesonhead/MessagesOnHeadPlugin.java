@@ -32,8 +32,8 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
         logger = getLogger();
 
         // Setup message stack repository
-        this.messageStackRepository = new MessageStackRepository(this);
         this.toggleManager = new ToggleManager(getDataFolder());
+        this.messageStackRepository = new MessageStackRepository(this, toggleManager);
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new SendMessageListener(messageStackRepository), this);
@@ -44,7 +44,7 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
         catch (RuntimeException e) { getLogger().log(Level.SEVERE, e.getMessage()); }
 
         // Registering commands
-        Objects.requireNonNull(getServer().getPluginCommand("messagesonhead")).setExecutor(new MohCommand(this, messageStackRepository));
+        Objects.requireNonNull(getServer().getPluginCommand("messagesonhead")).setExecutor(new MohCommand(this, messageStackRepository, toggleManager));
     }
 
     @Override

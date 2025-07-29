@@ -22,10 +22,10 @@ public class MohCommand implements CommandExecutor, TabCompleter {
     private final MessageStackRepository messageStackRepository;
     private final ToggleManager toggleManager;
 
-    public MohCommand(MessagesOnHeadPlugin plugin, MessageStackRepository messageStackRepository) {
+    public MohCommand(MessagesOnHeadPlugin plugin, MessageStackRepository messageStackRepository, ToggleManager toggleManager) {
         this.plugin = plugin;
         this.messageStackRepository = messageStackRepository;
-        this.toggleManager = plugin.getToggleManager();
+        this.toggleManager = toggleManager;
     }
 
     @Override
