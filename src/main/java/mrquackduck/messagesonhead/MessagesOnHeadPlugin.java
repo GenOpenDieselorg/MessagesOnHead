@@ -110,8 +110,4 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
 
         return MessageColorizer.colorize(messages.get(key).replace("<prefix>", messages.get("prefix")));
     }
-
-    public ToggleManager getToggleManager() {
-        return toggleManager;
-    }
 }
