@@ -38,7 +38,7 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         else if (args[0].equalsIgnoreCase("reload") && commandSender.hasPermission("messagesonhead.admin")) {
             return new ReloadCommand(plugin).onCommand(commandSender, command, s, args);
         }
-        else if (args[0].equalsIgnoreCase("toggle")) {
+        else if (args[0].equalsIgnoreCase("toggle") && commandSender.hasPermission("messagesonhead.toggle")) {
             if (!(commandSender instanceof Player)) {
                 commandSender.sendMessage("This command can only be used by players.");
                 return true;
@@ -70,7 +70,9 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length != 1) return completions;
 
-        options.add("toggle");
+        if (commandSender.hasPermission("messagesonhead.toggle")) {
+            options.add("toggle");
+        }
         if (commandSender.hasPermission("messagesonhead.admin")) {
             options.add("reload");
             options.add("info");
