@@ -16,6 +16,41 @@ public class ToggleManager {
         load();
     }
 
+    public boolean toggle(Player player) {
+        UUID uuid = player.getUniqueId();
+
+        boolean hasPlayerToggledOff = isToggledOff(player);
+        if (!hasPlayerToggledOff) {
+            toggledOffEveryone.add(uuid);
+            toggledOffOnline.add(uuid);
+        } else {
+            toggledOffEveryone.remove(uuid);
+            toggledOffOnline.remove(uuid);
+        }
+
+        save();
+        return hasPlayerToggledOff;
+    }
+
+    public Set<UUID> getToggledOffOnline() {
+        return toggledOffOnline;
+    }
+
+    public void onPlayerJoin(Player player) {
+        if (isToggledOffAll(player)) {
+            toggledOffOnline.add(player.getUniqueId());
+        }
+    }
+
+    public void onPlayerQuit(Player player) {
+        toggledOffOnline.remove(player.getUniqueId());
+    }
+
+    public void reload() {
+        toggledOffOnline.clear();
+        load();
+    }
+
     private void load() {
         toggledOffEveryone.clear();
         if (!file.exists()) return;
@@ -38,46 +73,11 @@ public class ToggleManager {
         } catch (IOException ignored) {}
     }
 
-    public void onPlayerJoin(Player player) {
-        if (isToggledOffAll(player)) {
-            toggledOffOnline.add(player.getUniqueId());
-        }
-    }
-
-    public void onPlayerQuit(Player player) {
-        toggledOffOnline.remove(player.getUniqueId());
-    }
-
     private boolean isToggledOff(Player player) {
         return toggledOffOnline.contains(player.getUniqueId());
     }
 
-    public boolean toggle(Player player) {
-        UUID uuid = player.getUniqueId();
-
-        boolean hasPlayerToggledOff = isToggledOff(player);
-        if (!hasPlayerToggledOff) {
-            toggledOffEveryone.add(uuid);
-            toggledOffOnline.add(uuid);
-        } else {
-            toggledOffEveryone.remove(uuid);
-            toggledOffOnline.remove(uuid);
-        }
-
-        save();
-        return hasPlayerToggledOff;
-    }
-
     private boolean isToggledOffAll(Player player) {
         return toggledOffEveryone.contains(player.getUniqueId());
-    }
-
-    public Set<UUID> getToggledOffOnline() {
-        return toggledOffOnline;
-    }
-
-    public void reload() {
-        toggledOffOnline.clear();
-        load();
     }
 }
