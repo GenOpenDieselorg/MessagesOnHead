@@ -1,6 +1,7 @@
 package mrquackduck.messagesonhead.commands;
 
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
+import mrquackduck.messagesonhead.configuration.Configuration;
 import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.services.ToggleManager;
 import mrquackduck.messagesonhead.services.MessageStackRepository;
@@ -19,11 +20,14 @@ import java.util.List;
 
 public class MohCommand implements CommandExecutor, TabCompleter {
     private final MessagesOnHeadPlugin plugin;
+    private final Configuration config;
     private final MessageStackRepository messageStackRepository;
     private final ToggleManager toggleManager;
 
-    public MohCommand(MessagesOnHeadPlugin plugin, MessageStackRepository messageStackRepository, ToggleManager toggleManager) {
+    public MohCommand(MessagesOnHeadPlugin plugin, Configuration config,
+                      MessageStackRepository messageStackRepository,ToggleManager toggleManager) {
         this.plugin = plugin;
+        this.config = config;
         this.messageStackRepository = messageStackRepository;
         this.toggleManager = toggleManager;
     }
@@ -31,24 +35,24 @@ public class MohCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (!allowedToRunAtLeastOneCommand(commandSender)) {
-            commandSender.sendMessage(MessagesOnHeadPlugin.getMessage("command-not-found"));
+            commandSender.sendMessage(config.getMessage("command-not-found"));
             return true;
         }
 
         if (args.length == 0 || args[0].equalsIgnoreCase("info")) {
-            return new InfoCommand().onCommand(commandSender, command, s, args);
+            return new InfoCommand(config).onCommand(commandSender, command, s, args);
         }
         else if (args[0].equalsIgnoreCase("say") && args.length >= 3 && commandSender.hasPermission(Permissions.ADMIN)) {
-            return new SayCommand(plugin, messageStackRepository).onCommand(commandSender, command, s, args);
+            return new SayCommand(plugin, config, messageStackRepository).onCommand(commandSender, command, s, args);
         }
         else if (args[0].equalsIgnoreCase("reload") && commandSender.hasPermission(Permissions.ADMIN)) {
-            return new ReloadCommand(plugin).onCommand(commandSender, command, s, args);
+            return new ReloadCommand(plugin, config).onCommand(commandSender, command, s, args);
         }
         else if (args[0].equalsIgnoreCase("toggle") && commandSender.hasPermission(Permissions.TOGGLE)) {
             return new ToggleCommand(toggleManager).onCommand(commandSender, command, s, args);
         }
 
-        commandSender.sendMessage(MessagesOnHeadPlugin.getMessage("command-not-found"));
+        commandSender.sendMessage(config.getMessage("command-not-found"));
         return true;
     }
 
