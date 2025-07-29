@@ -30,6 +30,11 @@ public class MohCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+        if (!allowedToRunAtLeastOneCommand(commandSender)) {
+            commandSender.sendMessage(MessagesOnHeadPlugin.getMessage("command-not-found"));
+            return true;
+        }
+
         if (args.length == 0 || args[0].equalsIgnoreCase("info")) {
             return new InfoCommand().onCommand(commandSender, command, s, args);
         }
@@ -59,17 +64,25 @@ public class MohCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length != 1) return completions;
 
+        if (allowedToRunAtLeastOneCommand(commandSender)) {
+            options.add("info");
+        }
+
         if (commandSender.hasPermission(Permissions.TOGGLE)) {
             options.add("toggle");
         }
 
         if (commandSender.hasPermission(Permissions.ADMIN)) {
             options.add("reload");
-            options.add("info");
             options.add("say");
         }
 
         StringUtil.copyPartialMatches(args[0], options, completions);
         return completions;
+    }
+
+    private boolean allowedToRunAtLeastOneCommand(CommandSender commandSender) {
+        return commandSender.hasPermission(Permissions.TOGGLE)
+                || commandSender.hasPermission(Permissions.ADMIN);
     }
 }
