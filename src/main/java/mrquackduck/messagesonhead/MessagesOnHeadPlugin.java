@@ -8,6 +8,7 @@ import mrquackduck.messagesonhead.listeners.SendMessageListener;
 import mrquackduck.messagesonhead.services.ToggleManager;
 import mrquackduck.messagesonhead.utils.MessageColorizer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -68,10 +69,8 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
         messageStackRepository.cleanUp();
 
         // Load toggled state for all currently online players
-        if (toggleManager != null) {
-            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
-                toggleManager.onPlayerJoin(player);
-            }
+        for (Player player : getServer().getOnlinePlayers()) {
+            toggleManager.onPlayerJoin(player);
         }
     }
 
