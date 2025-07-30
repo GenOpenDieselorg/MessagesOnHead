@@ -9,6 +9,12 @@
 **MessagesOnHead** is a **Paper (1.19.4+)** plugin that shows messages above players' heads for a little time when they send messages to the chat.\
 The plugin's functionality is based on the [Text Display](https://minecraft.wiki/w/Display#Text_Displays) entity.
 
+> [!IMPORTANT]
+> The plugin **might not work correctly** in Minecraft versions <ins>**1.20.2 to 1.21.5**</ins>. You may notice unusually large gaps between messages. Unfortunately, this issue cannot be fixed because of version-specific changes in these Minecraft versions.
+>
+> \* The last plugin version that supports **Minecraft 1.19.4 and above** is [Release 1.2.3](https://github.com/MrQuackDuck/MessagesOnHead/releases/tag/1.2.3).\
+> **All newer** versions of the plugin require your server to be running **at least version 1.21.6**.
+
 ### 👀 Preview
 
 <img height=300 src="https://github.com/user-attachments/assets/e9d2fa01-83c7-45ff-a0fa-d7fb8b649ad7" />
