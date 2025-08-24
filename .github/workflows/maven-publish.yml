@@ -15,17 +15,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Krok 2: Ustawienie środowiska Java (JDK 17)
-      - name: Set up JDK 17
+      # Krok 2: Ustawienie środowiska Java (JDK 21)
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          # ZMIANA WERSJI JAVY NA 21
+          java-version: '21'
           distribution: 'corretto'
           cache: maven
 
-      # Krok 3: Zbudowanie projektu za pomocą Maven z flagą -U
+      # Krok 3: Zbudowanie projektu za pomocą Maven
       - name: Build with Maven
-        run: mvn -B -U package --file pom.xml # <-- DODANO FLAGĘ -U
+        run: mvn -B package --file pom.xml
 
       # Krok 4: Przesłanie zbudowanego pliku .jar jako artefaktu
       - name: Upload artifact
