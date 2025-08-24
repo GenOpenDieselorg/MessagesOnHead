@@ -1,8 +1,9 @@
 package mrquackduck.messagesonhead;
 
 import com.tchristofferson.configupdater.ConfigUpdater;
+import it.pino.zelchat.api.ZelChatAPI;
 import mrquackduck.messagesonhead.configuration.Configuration;
-import mrquackduck.messagesonhead.listeners.ZelChatListener;
+import mrquackduck.messagesonhead.modules.ZelChatModule;
 import mrquackduck.messagesonhead.services.MessageStackRepository;
 import mrquackduck.messagesonhead.commands.MohCommand;
 import mrquackduck.messagesonhead.listeners.PlayerConnectionListener;
@@ -24,6 +25,7 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
     private final Configuration config = new Configuration(this);
     private MessageStackRepository messageStackRepository;
     private ToggleManager toggleManager;
+    private ZelChatModule zelChatModule;
 
     @Override
     public void onEnable() {
@@ -34,10 +36,11 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
         // Register listeners
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(messageStackRepository, toggleManager), this);
 
-        // Sprawdź, czy ZelChat jest na serwerze i zarejestruj odpowiedni listener
+        // Sprawdź, czy ZelChat jest na serwerze i zarejestruj odpowiedni moduł lub listener
         if (Bukkit.getPluginManager().isPluginEnabled("ZelChat")) {
-            getServer().getPluginManager().registerEvents(new ZelChatListener(messageStackRepository), this);
-            logger.info("ZelChat detected. Hooked into ZelChat events.");
+            this.zelChatModule = new ZelChatModule(this, messageStackRepository);
+            ZelChatAPI.get().getModuleManager().register(this, this.zelChatModule);
+            logger.info("ZelChat detected. Hooked into ZelChat via ChatModule.");
         } else {
             getServer().getPluginManager().registerEvents(new SendMessageListener(messageStackRepository), this);
             logger.info("ZelChat not found. Using default chat event listener.");
@@ -53,6 +56,11 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // Wyrejestrowanie modułu przy wyłączaniu pluginu
+        if (this.zelChatModule != null) {
+            ZelChatAPI.get().getModuleManager().unregister(this, this.zelChatModule);
+            logger.info("ZelChat module has been unregistered.");
+        }
         // Remove all entities related to the plugin
         messageStackRepository.cleanUp();
     }
