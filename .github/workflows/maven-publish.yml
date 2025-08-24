@@ -1,11 +1,10 @@
 name: Build MessagesOnHead Plugin
 
-# Uruchom akcję przy każdym pushu lub pull requeście do dowolnej gałęzi
 on:
   push:
-    branches: [ "**" ] # '**' oznacza wszystkie gałęzie
+    branches: [ "**" ]
   pull_request:
-    branches: [ "**" ] # '**' oznacza wszystkie gałęzie
+    branches: [ "**" ]
 
 jobs:
   build:
@@ -24,9 +23,9 @@ jobs:
           distribution: 'corretto'
           cache: maven
 
-      # Krok 3: Zbudowanie projektu za pomocą Maven
+      # Krok 3: Zbudowanie projektu za pomocą Maven z flagą -U
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: mvn -B -U package --file pom.xml # <-- DODANO FLAGĘ -U
 
       # Krok 4: Przesłanie zbudowanego pliku .jar jako artefaktu
       - name: Upload artifact
