@@ -1,0 +1,35 @@
+name: Build MessagesOnHead Plugin
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Krok 1: Pobranie kodu z repozytorium
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Krok 2: Ustawienie środowiska Java (JDK 17, zgodnie z konfiguracją projektu)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
+
+      # Krok 3: Zbudowanie projektu za pomocą Maven
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      # Krok 4: Przesłanie zbudowanego pliku .jar jako artefaktu
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MessagesOnHead
+          path: target/*.jar
