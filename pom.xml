@@ -62,14 +62,6 @@
           <id>sonatype</id>
           <url>https://oss.sonatype.org/content/groups/public/</url>
       </repository>
-      <repository>
-          <id>maven-central</id>
-          <url>https://oss.sonatype.org/content/groups/public</url>
-      </repository>
-      <repository>
-          <id>pinodev-repo</id>
-          <url>https://repo.pinodev.it/releases</url>
-      </repository>
   </repositories>
 
   <dependencies>
@@ -92,8 +84,10 @@
       </dependency>
       <dependency>
           <groupId>it.pino.zelchat</groupId>
-          <artifactId>api</artifactId>
-          <version>2.0.0-pre-b1</version> <scope>provided</scope>
+          <artifactId>zelchat-api</artifactId>
+          <version>2.0.0-pre-b1</version>
+          <scope>system</scope>
+          <systemPath>${project.basedir}/libs/zelchat-api-2.0.0-pre-b1.jar</systemPath>
       </dependency>
   </dependencies>
 </project>
