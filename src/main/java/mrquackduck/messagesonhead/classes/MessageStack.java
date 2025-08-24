@@ -61,46 +61,53 @@ public class MessageStack {
 
     public void pushMessage(String text) {
         if (text.isEmpty()) return;
-        var secondsToExist = calculateTimeForMessageToExist(text);
-        var minSymbolsForTimer = config.minSymbolsForTimer();
 
-        List<String> lines = StringUtils.splitTextIntoLines(text, config.symbolsPerLine(), config.symbolsLimit());
-        Collections.reverse(lines); // Reverse the stack from bottom to top
-
-        Entity currentEntityToSitOn = getEntityToSitOn();
-        List<Entity> newEntities = new ArrayList<>();
-
-        for (int i = 0; i < lines.size(); i++) {
-            String line = lines.get(i);
-            boolean isLastLine = (i == 0); // Since lines are reversed, first index points on the last line
-            boolean needToShowTimer = isLastLine && text.length() >= minSymbolsForTimer;
-
-            var middleEntityHeight = config.gapBetweenMessages();
-            if (currentEntityToSitOn.getType() == EntityType.PLAYER) {
-                middleEntityHeight = config.gapAboveHead();
-            }
-
-            final var middleEntity = spawnMiddleEntity(middleEntityHeight);
-            final var textDisplay = spawnTextDisplay(player.getLocation(), line, secondsToExist, needToShowTimer);
-            middleEntity.addPassenger(textDisplay);
-            currentEntityToSitOn.addPassenger(middleEntity);
-
-            newEntities.add(middleEntity);
-            newEntities.add(textDisplay);
-
-            currentEntityToSitOn = textDisplay;
-        }
-
-        DisplayedMessage newDisplayedMessage = new DisplayedMessage(newEntities);
-        displayedMessages.add(newDisplayedMessage);
-        entities.addAll(newEntities);
-
+        // Run the entire logic on the main server thread to avoid async errors
         new BukkitRunnable() {
             @Override
             public void run() {
-                removeDisplayedMessage(newDisplayedMessage);
+                var secondsToExist = calculateTimeForMessageToExist(text);
+                var minSymbolsForTimer = config.minSymbolsForTimer();
+
+                List<String> lines = StringUtils.splitTextIntoLines(text, config.symbolsPerLine(), config.symbolsLimit());
+                Collections.reverse(lines); // Reverse the stack from bottom to top
+
+                Entity currentEntityToSitOn = getEntityToSitOn();
+                List<Entity> newEntities = new ArrayList<>();
+
+                for (int i = 0; i < lines.size(); i++) {
+                    String line = lines.get(i);
+                    boolean isLastLine = (i == 0); // Since lines are reversed, first index points on the last line
+                    boolean needToShowTimer = isLastLine && text.length() >= minSymbolsForTimer;
+
+                    var middleEntityHeight = config.gapBetweenMessages();
+                    if (currentEntityToSitOn.getType() == EntityType.PLAYER) {
+                        middleEntityHeight = config.gapAboveHead();
+                    }
+
+                    final var middleEntity = spawnMiddleEntity(middleEntityHeight);
+                    final var textDisplay = spawnTextDisplay(player.getLocation(), line, secondsToExist, needToShowTimer);
+                    middleEntity.addPassenger(textDisplay);
+                    currentEntityToSitOn.addPassenger(middleEntity);
+
+                    newEntities.add(middleEntity);
+                    newEntities.add(textDisplay);
+
+                    currentEntityToSitOn = textDisplay;
+                }
+
+                DisplayedMessage newDisplayedMessage = new DisplayedMessage(newEntities);
+                displayedMessages.add(newDisplayedMessage);
+                entities.addAll(newEntities);
+
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        removeDisplayedMessage(newDisplayedMessage);
+                    }
+                }.runTaskLater(plugin, Math.round(secondsToExist * 20) + 2);
             }
-        }.runTaskLater(plugin, Math.round(secondsToExist * 20) + 2);
+        }.runTask(plugin);
     }
 
     private void removeDisplayedMessage(DisplayedMessage displayedMessage) {
