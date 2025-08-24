@@ -20,4 +20,4 @@ permissions:
     description: Allows to use staff commands of the plugin
     default: op
 
-softdepend: [PlaceholderAPI]
+softdepend: [PlaceholderAPI, ZelChat]
