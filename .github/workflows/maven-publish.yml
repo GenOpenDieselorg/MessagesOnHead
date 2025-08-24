@@ -1,10 +1,11 @@
 name: Build MessagesOnHead Plugin
 
+# Uruchom akcję przy każdym pushu lub pull requeście do dowolnej gałęzi
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "**" ] # '**' oznacza wszystkie gałęzie
   pull_request:
-    branches: [ "main" ]
+    branches: [ "**" ] # '**' oznacza wszystkie gałęzie
 
 jobs:
   build:
@@ -15,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Krok 2: Ustawienie środowiska Java (JDK 17, zgodnie z konfiguracją projektu)
+      # Krok 2: Ustawienie środowiska Java (JDK 17)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
