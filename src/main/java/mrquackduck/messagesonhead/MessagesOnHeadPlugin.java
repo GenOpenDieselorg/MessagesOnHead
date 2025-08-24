@@ -2,11 +2,13 @@ package mrquackduck.messagesonhead;
 
 import com.tchristofferson.configupdater.ConfigUpdater;
 import mrquackduck.messagesonhead.configuration.Configuration;
+import mrquackduck.messagesonhead.listeners.ZelChatListener;
 import mrquackduck.messagesonhead.services.MessageStackRepository;
 import mrquackduck.messagesonhead.commands.MohCommand;
 import mrquackduck.messagesonhead.listeners.PlayerConnectionListener;
 import mrquackduck.messagesonhead.listeners.SendMessageListener;
 import mrquackduck.messagesonhead.services.ToggleManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -30,8 +32,16 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
         this.messageStackRepository = new MessageStackRepository(this, toggleManager);
 
         // Register listeners
-        getServer().getPluginManager().registerEvents(new SendMessageListener(messageStackRepository), this);
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(messageStackRepository, toggleManager), this);
+
+        // Sprawdź, czy ZelChat jest na serwerze i zarejestruj odpowiedni listener
+        if (Bukkit.getPluginManager().isPluginEnabled("ZelChat")) {
+            getServer().getPluginManager().registerEvents(new ZelChatListener(messageStackRepository), this);
+            logger.info("ZelChat detected. Hooked into ZelChat events.");
+        } else {
+            getServer().getPluginManager().registerEvents(new SendMessageListener(messageStackRepository), this);
+            logger.info("ZelChat not found. Using default chat event listener.");
+        }
 
         // Starting the plugin
         try { start(); }
