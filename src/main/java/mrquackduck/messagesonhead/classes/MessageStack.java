@@ -29,8 +29,8 @@ public class MessageStack {
     private final List<DisplayedMessage> displayedMessages = new ArrayList<>();
     public static final String customEntityTag = "moh-entity";
     
-    // Limit maksymalnej liczby wiadomości na gracza
-    private static final int MAX_MESSAGES_PER_PLAYER = 5;
+    // Zmniejszony limit dla lepszej wydajności przy 200+ graczach
+    private static final int MAX_MESSAGES_PER_PLAYER = 3;
 
     public MessageStack(Player player, MessagesOnHeadPlugin plugin, ToggleManager toggleManager) {
         this.player = player;
@@ -88,7 +88,10 @@ public class MessageStack {
                 Collections.reverse(lines); // Reverse the stack from bottom to top
 
                 Entity currentEntityToSitOn = getEntityToSitOn();
-                List<Entity> newEntities = new ArrayList<>();
+                List<Entity> newEntities = new ArrayList<>(lines.size() * 2);
+                
+                // Pobierz listę graczy z wyłączonym widokiem raz, nie dla każdego entity
+                Set<Player> toggledOffPlayers = getToggledOffPlayers();
 
                 for (int i = 0; i < lines.size(); i++) {
                     String line = lines.get(i);
@@ -100,8 +103,8 @@ public class MessageStack {
                         middleEntityHeight = config.gapAboveHead();
                     }
 
-                    final var middleEntity = spawnMiddleEntity(middleEntityHeight);
-                    final var textDisplay = spawnTextDisplay(player.getLocation(), line, secondsToExist, needToShowTimer);
+                    final var middleEntity = spawnMiddleEntity(middleEntityHeight, toggledOffPlayers);
+                    final var textDisplay = spawnTextDisplay(player.getLocation(), line, secondsToExist, needToShowTimer, toggledOffPlayers);
                     middleEntity.addPassenger(textDisplay);
                     currentEntityToSitOn.addPassenger(middleEntity);
 
@@ -164,7 +167,7 @@ public class MessageStack {
         player.addPassenger(nextEntity);
     }
 
-    private TextDisplay spawnTextDisplay(Location location, String text, double secondsToExist, boolean showTimer) {
+    private TextDisplay spawnTextDisplay(Location location, String text, double secondsToExist, boolean showTimer, Set<Player> toggledOffPlayers) {
         if (showTimer && !config.isTimerEnabled()) showTimer = false;
         location.setY(location.y() + 50); // Setting higher Y coordinate to prevent the message appearing from bottom
 
@@ -178,7 +181,8 @@ public class MessageStack {
         textDisplay.setLineWidth(Integer.MAX_VALUE);
         textDisplay.addScoreboardTag(customEntityTag);
 
-        hideFromToggledOffViewers(textDisplay);
+        // Użyj przekazanej listy graczy zamiast pobierać ją ponownie
+        hideFromToggledOffViewers(textDisplay, toggledOffPlayers);
 
         var textToBeDisplayed = Component.text(text).color(TextColor.fromHexString(config.textColor()));
         if (config.isPlaceholderApiIntegrationEnabled()) {
@@ -216,7 +220,7 @@ public class MessageStack {
         return text;
     }
 
-    private Entity spawnMiddleEntity(float height) {
+    private Entity spawnMiddleEntity(float height, Set<Player> toggledOffPlayers) {
         var location = player.getLocation();
         location.setY(location.y() + 50); // Setting higher Y coordinate to prevent the message appearing from bottom
 
@@ -228,20 +232,31 @@ public class MessageStack {
         entity.setGravity(false);
         entity.addScoreboardTag(customEntityTag);
 
-        hideFromToggledOffViewers(entity);
+        // Użyj przekazanej listy graczy zamiast pobierać ją ponownie
+        hideFromToggledOffViewers(entity, toggledOffPlayers);
 
         return entity;
     }
-
-    private void hideFromToggledOffViewers(Entity entity) {
+    
+    /**
+     * Pobiera listę graczy z wyłączonym widokiem - wywoływane raz na wiadomość
+     */
+    private Set<Player> getToggledOffPlayers() {
+        Set<Player> result = new HashSet<>();
         if (toggleManager != null) {
             for (UUID uuid : toggleManager.getToggledOffOnline()) {
                 Player viewer = Bukkit.getPlayer(uuid);
-                if (viewer == null) continue;
-
-                if (!viewer.hasPermission(Permissions.TOGGLE)) continue;
-                viewer.hideEntity(plugin, entity);
+                if (viewer != null && viewer.hasPermission(Permissions.TOGGLE)) {
+                    result.add(viewer);
+                }
             }
+        }
+        return result;
+    }
+
+    private void hideFromToggledOffViewers(Entity entity, Set<Player> toggledOffPlayers) {
+        for (Player viewer : toggledOffPlayers) {
+            viewer.hideEntity(plugin, entity);
         }
     }
 
