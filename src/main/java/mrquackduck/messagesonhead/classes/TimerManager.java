@@ -21,6 +21,10 @@ public class TimerManager {
     private final MessagesOnHeadPlugin plugin;
     private final Map<TextDisplay, TimerData> activeTimers = new ConcurrentHashMap<>();
     private BukkitTask globalTask;
+    
+    // Interwał aktualizacji w tickach (10 ticków = 0.5s - lepszy balans wydajność/płynność)
+    private static final int UPDATE_INTERVAL_TICKS = 10;
+    private static final double UPDATE_INTERVAL_SECONDS = UPDATE_INTERVAL_TICKS / 20.0;
 
     private TimerManager(MessagesOnHeadPlugin plugin) {
         this.plugin = plugin;
@@ -63,13 +67,13 @@ public class TimerManager {
 
                     // Aktualizuj tekst
                     String timerText = String.format(data.timerFormat, Math.max(0.0, data.timeLeft));
-                    display.text(data.baseText.append(Component.text(timerText).color(TextColor.fromHexString(data.timerColor))));
+                    display.text(data.baseText.append(Component.text(timerText).color(data.timerColorParsed)));
 
-                    // Zmniejsz czas (co 4 ticki = 0.2s zamiast co 2 ticki = 0.1s dla lepszej wydajności)
-                    data.timeLeft -= 0.2;
+                    // Zmniejsz czas
+                    data.timeLeft -= UPDATE_INTERVAL_SECONDS;
                 }
             }
-        }.runTaskTimer(plugin, 1, 4); // Co 4 ticki zamiast 2 - mniejsze obciążenie
+        }.runTaskTimer(plugin, 1, UPDATE_INTERVAL_TICKS);
     }
 
     public void registerTextDisplay(TextDisplay display, TextComponent baseText, double secondsToExist, String timerFormat, String timerColor) {
@@ -94,14 +98,15 @@ public class TimerManager {
     private static class TimerData {
         final TextComponent baseText;
         final String timerFormat;
-        final String timerColor;
+        final TextColor timerColorParsed;
         double timeLeft;
 
         TimerData(TextComponent baseText, double timeLeft, String timerFormat, String timerColor) {
             this.baseText = baseText;
             this.timeLeft = timeLeft;
             this.timerFormat = timerFormat;
-            this.timerColor = timerColor;
+            // Parsuj kolor raz przy tworzeniu zamiast przy każdej aktualizacji
+            this.timerColorParsed = TextColor.fromHexString(timerColor);
         }
     }
 }
