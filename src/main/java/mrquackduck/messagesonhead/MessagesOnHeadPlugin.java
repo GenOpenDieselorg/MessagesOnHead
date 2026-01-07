@@ -2,6 +2,7 @@ package mrquackduck.messagesonhead;
 
 import com.tchristofferson.configupdater.ConfigUpdater;
 import it.pino.zelchat.api.ZelChatAPI;
+import mrquackduck.messagesonhead.classes.TimerManager;
 import mrquackduck.messagesonhead.configuration.Configuration;
 import mrquackduck.messagesonhead.modules.ZelChatModule;
 import mrquackduck.messagesonhead.services.MessageStackRepository;
@@ -30,7 +31,7 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         // Setup services
-        this.toggleManager = new ToggleManager(getDataFolder());
+        this.toggleManager = new ToggleManager(getDataFolder(), this);
         this.messageStackRepository = new MessageStackRepository(this, toggleManager);
 
         // Register listeners
@@ -61,6 +62,10 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
             ZelChatAPI.get().getModuleManager().unregister(this, this.zelChatModule);
             logger.info("ZelChat module has been unregistered.");
         }
+        
+        // Zatrzymaj globalny timer manager
+        TimerManager.shutdown();
+        
         // Remove all entities related to the plugin
         messageStackRepository.cleanUp();
     }
