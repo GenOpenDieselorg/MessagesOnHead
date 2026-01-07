@@ -5,7 +5,6 @@ import mrquackduck.messagesonhead.configuration.Configuration;
 import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.utils.ColorUtils;
 import mrquackduck.messagesonhead.utils.EntityUtils;
-import mrquackduck.messagesonhead.utils.StringUtils;
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
 import mrquackduck.messagesonhead.services.ToggleManager;
 import net.kyori.adventure.text.Component;
@@ -29,6 +28,9 @@ public class MessageStack {
     private final List<Entity> entities = new ArrayList<>();
     private final List<DisplayedMessage> displayedMessages = new ArrayList<>();
     public static final String customEntityTag = "moh-entity";
+    
+    // Limit maksymalnej liczby wiadomości na gracza
+    private static final int MAX_MESSAGES_PER_PLAYER = 5;
 
     public MessageStack(Player player, MessagesOnHeadPlugin plugin, ToggleManager toggleManager) {
         this.player = player;
@@ -56,7 +58,13 @@ public class MessageStack {
     }
 
     public void deleteAllRelatedEntities() {
-        for (Entity entity : entities) entity.remove();
+        for (Entity entity : entities) {
+            try {
+                entity.remove();
+            } catch (Exception ignored) {}
+        }
+        entities.clear();
+        displayedMessages.clear();
     }
 
     public void pushMessage(String text) {
@@ -66,10 +74,17 @@ public class MessageStack {
         new BukkitRunnable() {
             @Override
             public void run() {
+                // Usuń najstarsze wiadomości jeśli przekroczono limit
+                while (displayedMessages.size() >= MAX_MESSAGES_PER_PLAYER) {
+                    if (!displayedMessages.isEmpty()) {
+                        removeDisplayedMessage(displayedMessages.get(0));
+                    }
+                }
+                
                 var secondsToExist = calculateTimeForMessageToExist(text);
                 var minSymbolsForTimer = config.minSymbolsForTimer();
 
-                List<String> lines = StringUtils.splitTextIntoLines(text, config.symbolsPerLine(), config.symbolsLimit());
+                List<String> lines = mrquackduck.messagesonhead.utils.StringUtils.splitTextIntoLines(text, config.symbolsPerLine(), config.symbolsLimit());
                 Collections.reverse(lines); // Reverse the stack from bottom to top
 
                 Entity currentEntityToSitOn = getEntityToSitOn();
@@ -116,7 +131,9 @@ public class MessageStack {
 
         // Remove all entities in the displayed message
         for (Entity entity : displayedMessage.entities) {
-            entity.remove();
+            try {
+                entity.remove();
+            } catch (Exception ignored) {}
             entities.remove(entity);
         }
 
@@ -174,32 +191,14 @@ public class MessageStack {
             textToBeDisplayed = LegacyComponentSerializer.legacyAmpersand().deserialize(text);
         }
 
-        if (showTimer) showTextDisplayWithTimer(textDisplay, textToBeDisplayed, secondsToExist);
-        else textDisplay.text(textToBeDisplayed);
+        if (showTimer) {
+            // Rejestracja w globalnym timerze zamiast tworzenia osobnego taska
+            TimerManager.getInstance(plugin).registerTextDisplay(textDisplay, textToBeDisplayed, secondsToExist, config.timerFormat(), config.timerColor());
+        } else {
+            textDisplay.text(textToBeDisplayed);
+        }
 
         return textDisplay;
-    }
-
-    private void showTextDisplayWithTimer(TextDisplay textDisplay, TextComponent textToBeDisplayed, double secondsToExist) {
-        new BukkitRunnable() {
-            double timeLeft = secondsToExist;
-
-            @Override
-            public void run() {
-                // Allow for one extra tick to show 0.0
-                if (textDisplay.isDead() || timeLeft < -0.1) {
-                    this.cancel();
-                    return;
-                }
-
-                var timerFormat = config.timerFormat();
-                assert timerFormat != null;
-                String timerText = String.format(timerFormat, Math.max(0.0, timeLeft)); // Ensure we don't show negative numbers
-                textDisplay.text(textToBeDisplayed.append(Component.text(timerText).color(TextColor.fromHexString(config.timerColor()))));
-
-                timeLeft -= 0.1;
-            }
-        }.runTaskTimer(plugin, 1, 2);
     }
 
     private String applyColorPlaceholders(String text) {
