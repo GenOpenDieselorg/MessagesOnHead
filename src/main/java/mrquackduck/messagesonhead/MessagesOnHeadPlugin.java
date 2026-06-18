@@ -39,11 +39,11 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
 
         // Sprawdź, czy ZelChat jest na serwerze i zarejestruj odpowiedni moduł lub listener
         if (Bukkit.getPluginManager().isPluginEnabled("ZelChat")) {
-            this.zelChatModule = new ZelChatModule(this, messageStackRepository);
+            this.zelChatModule = new ZelChatModule(messageStackRepository);
             ZelChatAPI.get().getModuleManager().register(this, this.zelChatModule);
             logger.info("ZelChat detected. Hooked into ZelChat via ChatModule.");
         } else {
-            getServer().getPluginManager().registerEvents(new SendMessageListener(this, messageStackRepository), this);
+            getServer().getPluginManager().registerEvents(new SendMessageListener(messageStackRepository), this);
             logger.info("ZelChat not found. Using default chat event listener.");
         }
 

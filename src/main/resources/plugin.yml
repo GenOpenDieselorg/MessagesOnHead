@@ -1,7 +1,8 @@
 name: MessagesOnHead
 version: '${project.version}'
 main: mrquackduck.messagesonhead.MessagesOnHeadPlugin
-api-version: '1.21.4'
+api-version: '1.21.6'
+folia-supported: true
 
 commands:
   messagesonhead:

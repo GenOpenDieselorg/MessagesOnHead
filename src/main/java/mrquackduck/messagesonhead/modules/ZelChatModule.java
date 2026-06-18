@@ -5,21 +5,16 @@ import it.pino.zelchat.api.message.state.MessageState;
 import it.pino.zelchat.api.module.ChatModule;
 import it.pino.zelchat.api.module.annotation.ChatModuleSettings;
 import it.pino.zelchat.api.module.priority.ModulePriority;
-import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
-import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.services.MessageStackRepository;
 import mrquackduck.messagesonhead.utils.ColorUtils;
-import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 @ChatModuleSettings(pluginOwner = "MessagesOnHead", priority = ModulePriority.NORMAL)
 public class ZelChatModule implements ChatModule {
-    private final MessagesOnHeadPlugin plugin;
     private final MessageStackRepository messageStackRepository;
 
-    public ZelChatModule(MessagesOnHeadPlugin plugin, MessageStackRepository messageStackRepository) {
-        this.plugin = plugin;
+    public ZelChatModule(MessageStackRepository messageStackRepository) {
         this.messageStackRepository = messageStackRepository;
     }
 
@@ -36,9 +31,6 @@ public class ZelChatModule implements ChatModule {
 
         // Kontynuuj, jeśli wiadomość nie jest zablokowana
         Player player = chatMessage.getBukkitPlayer();
-
-        if (!player.hasPermission(Permissions.SHOW)) return;
-        if (player.getGameMode() == GameMode.SPECTATOR) return;
 
         var messageStack = messageStackRepository.getMessageStack(player);
         var plainMessage = chatMessage.getRawMessage();

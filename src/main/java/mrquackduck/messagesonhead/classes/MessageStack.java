@@ -8,12 +8,12 @@ import mrquackduck.messagesonhead.utils.EntityUtils;
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
 import mrquackduck.messagesonhead.services.ToggleManager;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import mrquackduck.messagesonhead.utils.Scheduler;
 import org.bukkit.*;
 import org.bukkit.entity.*;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
@@ -27,6 +27,7 @@ public class MessageStack {
     private final Player player;
     private final List<Entity> entities = new ArrayList<>();
     private final List<DisplayedMessage> displayedMessages = new ArrayList<>();
+    private boolean scaffoldedExistingEntities = false;
     public static final String customEntityTag = "moh-entity";
     
     // Zmniejszony limit dla lepszej wydajności przy 200+ graczach
@@ -37,10 +38,12 @@ public class MessageStack {
         this.plugin = plugin;
         this.config = new Configuration(plugin);
         this.toggleManager = toggleManager;
-        scaffoldExistingStackEntities();
     }
 
     private void scaffoldExistingStackEntities() {
+        if (scaffoldedExistingEntities) return;
+        scaffoldedExistingEntities = true;
+
         Entity currentEntity = player;
         while (!currentEntity.getPassengers().isEmpty()) {
             var passengers = currentEntity.getPassengers();
@@ -58,22 +61,37 @@ public class MessageStack {
     }
 
     public void deleteAllRelatedEntities() {
-        for (Entity entity : entities) {
-            try {
-                entity.remove();
-            } catch (Exception ignored) {}
-        }
+        List<Entity> entitiesToRemove = new ArrayList<>(entities);
         entities.clear();
         displayedMessages.clear();
+
+        for (Entity entity : entitiesToRemove) {
+            unregisterTimer(entity);
+
+            try {
+                if (Scheduler.isFolia()) {
+                    Scheduler.runForEntity(plugin, entity, entity::remove);
+                } else {
+                    entity.remove();
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     public void pushMessage(String text) {
+        pushMessage(text, false);
+    }
+
+    public void pushMessage(String text, boolean bypassPlayerChecks) {
         if (text.isEmpty()) return;
 
-        // Run the entire logic on the main server thread to avoid async errors
-        new BukkitRunnable() {
-            @Override
-            public void run() {
+        // Uruchom całą logikę na wątku regionu właściwego dla gracza
+        // (Paper: wątek główny, Folia: region gracza), aby uniknąć błędów wątkowych.
+        Scheduler.runForEntity(plugin, player, () -> {
+                if (!bypassPlayerChecks && shouldSkipPlayerMessage()) return;
+
+                scaffoldExistingStackEntities();
+
                 // Usuń najstarsze wiadomości jeśli przekroczono limit
                 while (displayedMessages.size() >= MAX_MESSAGES_PER_PLAYER) {
                     if (!displayedMessages.isEmpty()) {
@@ -118,14 +136,22 @@ public class MessageStack {
                 displayedMessages.add(newDisplayedMessage);
                 entities.addAll(newEntities);
 
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        removeDisplayedMessage(newDisplayedMessage);
-                    }
-                }.runTaskLater(plugin, Math.round(secondsToExist * 20) + 2);
-            }
-        }.runTask(plugin);
+                Scheduler.runForEntityLater(plugin, player,
+                        () -> removeDisplayedMessage(newDisplayedMessage),
+                        Math.round(secondsToExist * 20) + 2);
+        });
+    }
+
+    private boolean shouldSkipPlayerMessage() {
+        if (!player.hasPermission(Permissions.SHOW)) return true;
+        if (player.getGameMode() == GameMode.SPECTATOR) return true;
+        return config.hideWhenInvisible() && (player.isInvisible() || player.hasPotionEffect(PotionEffectType.INVISIBILITY));
+    }
+
+    private void unregisterTimer(Entity entity) {
+        if (entity instanceof TextDisplay textDisplay) {
+            TimerManager.unregisterIfRunning(textDisplay);
+        }
     }
 
     private void removeDisplayedMessage(DisplayedMessage displayedMessage) {
@@ -134,6 +160,7 @@ public class MessageStack {
 
         // Remove all entities in the displayed message
         for (Entity entity : displayedMessage.entities) {
+            unregisterTimer(entity);
             try {
                 entity.remove();
             } catch (Exception ignored) {}
@@ -246,7 +273,7 @@ public class MessageStack {
         if (toggleManager != null) {
             for (UUID uuid : toggleManager.getToggledOffOnline()) {
                 Player viewer = Bukkit.getPlayer(uuid);
-                if (viewer != null && viewer.hasPermission(Permissions.TOGGLE)) {
+                if (viewer != null) {
                     result.add(viewer);
                 }
             }
@@ -256,7 +283,15 @@ public class MessageStack {
 
     private void hideFromToggledOffViewers(Entity entity, Set<Player> toggledOffPlayers) {
         for (Player viewer : toggledOffPlayers) {
-            viewer.hideEntity(plugin, entity);
+            if (Scheduler.isFolia()) {
+                Scheduler.runForEntity(plugin, viewer, () -> {
+                    if (viewer.hasPermission(Permissions.TOGGLE)) {
+                        viewer.hideEntity(plugin, entity);
+                    }
+                });
+            } else if (viewer.hasPermission(Permissions.TOGGLE)) {
+                viewer.hideEntity(plugin, entity);
+            }
         }
     }
 

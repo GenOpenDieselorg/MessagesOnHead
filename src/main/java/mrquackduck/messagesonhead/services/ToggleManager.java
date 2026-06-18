@@ -1,8 +1,8 @@
 package mrquackduck.messagesonhead.services;
 
+import mrquackduck.messagesonhead.utils.Scheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.*;
 import java.util.*;
@@ -107,14 +107,11 @@ public class ToggleManager {
             // Skopiuj dane przed async operacją
             final Set<UUID> toSave = new HashSet<>(toggledOffEveryone);
             
-            // Asynchroniczny zapis
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    saveSync(toSave);
-                    saveScheduled.set(false);
-                }
-            }.runTaskAsynchronously(plugin);
+            // Asynchroniczny zapis (kompatybilny z Paperem i Folią)
+            Scheduler.runAsync(plugin, () -> {
+                saveSync(toSave);
+                saveScheduled.set(false);
+            });
         } else {
             // Fallback do synchronicznego zapisu
             saveSync(toggledOffEveryone);

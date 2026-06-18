@@ -35,7 +35,7 @@ public class SayCommand implements CommandExecutor {
         }
 
         var messageStack = messageStackRepository.getMessageStack(player);
-        messageStack.pushMessage(message.toString());
+        messageStack.pushMessage(message.toString(), true);
 
         return true;
     }

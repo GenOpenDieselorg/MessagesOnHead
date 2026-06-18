@@ -3,10 +3,10 @@ package mrquackduck.messagesonhead.services;
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
 import mrquackduck.messagesonhead.classes.MessageStack;
 import mrquackduck.messagesonhead.utils.EntityUtils;
+import mrquackduck.messagesonhead.utils.Scheduler;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,10 +53,15 @@ public class MessageStackRepository {
             } catch (Exception ignored) {}
         }
         playersStacks.clear();
-        
+
+        // Skan po wszystkich encjach świata nie jest bezpieczny wątkowo na Folii
+        // (każda encja należy do swojego regionu). Encje pluginu i tak są pasażerami
+        // graczy i zostają usunięte powyżej, więc na Folii pomijamy zbiorczy skan.
+        if (Scheduler.isFolia()) return;
+
         // Batch removal - zbierz wszystkie entity do usunięcia, potem usuń
         List<Entity> entitiesToRemove = new ArrayList<>();
-        
+
         for (World world : plugin.getServer().getWorlds()) {
             for (Entity entity : world.getEntities()) {
                 try {
@@ -86,38 +91,31 @@ public class MessageStackRepository {
             } catch (Exception ignored) {}
         }
         playersStacks.clear();
-        
+
+        // Skan po encjach świata nie jest bezpieczny wątkowo na Folii - pomijamy go tam.
+        if (Scheduler.isFolia()) return;
+
         // Potem asynchronicznie znajdź pozostałe entity
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                List<Entity> entitiesToRemove = new ArrayList<>();
-                
-                for (World world : plugin.getServer().getWorlds()) {
-                    for (Entity entity : world.getEntities()) {
-                        try {
-                            if (EntityUtils.hasScoreboardTagCaseInvariant(entity, customEntityTag)) {
-                                entitiesToRemove.add(entity);
-                            }
-                        } catch (Exception ignored) {}
-                    }
-                }
-                
-                // Usuń na głównym wątku
-                if (!entitiesToRemove.isEmpty()) {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            for (Entity entity : entitiesToRemove) {
-                                try {
-                                    entity.remove();
-                                } catch (Exception ignored) {}
-                            }
+        Scheduler.runAsync(plugin, () -> {
+            List<Entity> entitiesToRemove = new ArrayList<>();
+
+            for (World world : plugin.getServer().getWorlds()) {
+                for (Entity entity : world.getEntities()) {
+                    try {
+                        if (EntityUtils.hasScoreboardTagCaseInvariant(entity, customEntityTag)) {
+                            entitiesToRemove.add(entity);
                         }
-                    }.runTask(plugin);
+                    } catch (Exception ignored) {}
                 }
             }
-        }.runTaskAsynchronously(plugin);
+
+            // Usuń każdą encję na regionie, do którego należy
+            for (Entity entity : entitiesToRemove) {
+                try {
+                    Scheduler.runForEntity(plugin, entity, entity::remove);
+                } catch (Exception ignored) {}
+            }
+        });
     }
     
     /**

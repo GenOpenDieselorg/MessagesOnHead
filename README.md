@@ -6,7 +6,7 @@
   <a href="https://modrinth.com/plugin/messagesonhead"><img src="https://img.shields.io/badge/Modrinth-blue.svg?logo=modrinth&color=15C132&logoColor=FFFFFF" /></a>
 </p>
 
-**MessagesOnHead** is a **Paper (1.19.4+)** plugin that shows messages above players' heads for a little time when they send messages to the chat.\
+**MessagesOnHead** is a **Paper/Folia** plugin that shows messages above players' heads for a little time when they send messages to the chat.\
 The plugin's functionality is based on the [Text Display](https://minecraft.wiki/w/Display#Text_Displays) entity.
 
 > [!IMPORTANT]
