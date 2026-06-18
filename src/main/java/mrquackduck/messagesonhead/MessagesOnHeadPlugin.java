@@ -43,7 +43,7 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
             ZelChatAPI.get().getModuleManager().register(this, this.zelChatModule);
             logger.info("ZelChat detected. Hooked into ZelChat via ChatModule.");
         } else {
-            getServer().getPluginManager().registerEvents(new SendMessageListener(messageStackRepository), this);
+            getServer().getPluginManager().registerEvents(new SendMessageListener(this, messageStackRepository), this);
             logger.info("ZelChat not found. Using default chat event listener.");
         }
 
