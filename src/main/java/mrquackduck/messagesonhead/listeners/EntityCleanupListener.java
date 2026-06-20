@@ -8,7 +8,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityRemoveFromWorldEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 
 /**
@@ -21,7 +21,7 @@ import org.bukkit.event.world.EntitiesLoadEvent;
  *     <li>{@link EntitiesLoadEvent} – gdy ładowane są encje chunka, usuwamy osierocone
  *         encje pluginu (tag {@code moh-entity}), których nie zna repozytorium. To czyści
  *         "duchy" pozostałe po crashu lub niegracefulnym wyłączeniu serwera.</li>
- *     <li>{@link EntityRemoveFromWorldEvent} – gdy encja znika z innego powodu niż nasza
+ *     <li>{@link EntityRemoveEvent}– gdy encja znika z innego powodu niż nasza
  *         własna logika (np. /kill, inny plugin), odpinamy jej timer i przestajemy ją
  *         śledzić, by nie zostawiać martwych wpisów w pamięci.</li>
  * </ul>
@@ -47,7 +47,7 @@ public class EntityCleanupListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityRemove(EntityRemoveFromWorldEvent event) {
+    public void onEntityRemove(EntityRemoveEvent event) {
         Entity entity = event.getEntity();
         if (!EntityUtils.hasScoreboardTagCaseInvariant(entity, MessageStack.customEntityTag)) return;
 
