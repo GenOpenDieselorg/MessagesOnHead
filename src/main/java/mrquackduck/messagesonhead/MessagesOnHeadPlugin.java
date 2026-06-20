@@ -7,6 +7,7 @@ import mrquackduck.messagesonhead.configuration.Configuration;
 import mrquackduck.messagesonhead.modules.ZelChatModule;
 import mrquackduck.messagesonhead.services.MessageStackRepository;
 import mrquackduck.messagesonhead.commands.MohCommand;
+import mrquackduck.messagesonhead.listeners.EntityCleanupListener;
 import mrquackduck.messagesonhead.listeners.PlayerConnectionListener;
 import mrquackduck.messagesonhead.listeners.SendMessageListener;
 import mrquackduck.messagesonhead.services.ToggleManager;
@@ -36,6 +37,8 @@ public final class MessagesOnHeadPlugin extends JavaPlugin {
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(messageStackRepository, toggleManager), this);
+        // Region-bezpieczne sprzątanie osieroconych encji (po crashu) i martwych timerów
+        getServer().getPluginManager().registerEvents(new EntityCleanupListener(messageStackRepository), this);
 
         // Sprawdź, czy ZelChat jest na serwerze i zarejestruj odpowiedni moduł lub listener
         if (Bukkit.getPluginManager().isPluginEnabled("ZelChat")) {

@@ -6,6 +6,7 @@ import mrquackduck.messagesonhead.configuration.Permissions;
 import mrquackduck.messagesonhead.utils.ColorUtils;
 import mrquackduck.messagesonhead.utils.EntityUtils;
 import mrquackduck.messagesonhead.MessagesOnHeadPlugin;
+import mrquackduck.messagesonhead.services.MessageStackRepository;
 import mrquackduck.messagesonhead.services.ToggleManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
@@ -24,6 +25,7 @@ public class MessageStack {
     private final MessagesOnHeadPlugin plugin;
     private final Configuration config;
     private final ToggleManager toggleManager;
+    private final MessageStackRepository repository;
     private final Player player;
     private final List<Entity> entities = new ArrayList<>();
     private final List<DisplayedMessage> displayedMessages = new ArrayList<>();
@@ -33,11 +35,25 @@ public class MessageStack {
     // Zmniejszony limit dla lepszej wydajności przy 200+ graczach
     private static final int MAX_MESSAGES_PER_PLAYER = 3;
 
-    public MessageStack(Player player, MessagesOnHeadPlugin plugin, ToggleManager toggleManager) {
+    public MessageStack(Player player, MessagesOnHeadPlugin plugin, ToggleManager toggleManager, MessageStackRepository repository) {
         this.player = player;
         this.plugin = plugin;
         this.config = new Configuration(plugin);
         this.toggleManager = toggleManager;
+        this.repository = repository;
+    }
+
+    /**
+     * Planuje usunięcie wszystkich encji tego stacku na wątku regionu właściwego dla gracza.
+     * Dzięki temu listy encji tykane są zawsze z tego samego wątku (region gracza), nawet
+     * gdy czyszczenie inicjuje inny wątek (np. komenda /reload) - co jest wymogiem Folii.
+     */
+    public void requestCleanup() {
+        if (Scheduler.isFolia()) {
+            Scheduler.runForEntity(plugin, player, this::deleteAllRelatedEntities);
+        } else {
+            deleteAllRelatedEntities();
+        }
     }
 
     private void scaffoldExistingStackEntities() {
@@ -52,6 +68,7 @@ public class MessageStack {
                 if (EntityUtils.hasScoreboardTagCaseInvariant(passenger, customEntityTag)) {
                     currentEntity = passenger;
                     entities.add(passenger);
+                    repository.track(passenger);
                     needToBreak = false;
                 }
             }
@@ -67,6 +84,7 @@ public class MessageStack {
 
         for (Entity entity : entitiesToRemove) {
             unregisterTimer(entity);
+            repository.untrack(entity);
 
             try {
                 if (Scheduler.isFolia()) {
@@ -135,6 +153,7 @@ public class MessageStack {
                 DisplayedMessage newDisplayedMessage = new DisplayedMessage(newEntities);
                 displayedMessages.add(newDisplayedMessage);
                 entities.addAll(newEntities);
+                for (Entity newEntity : newEntities) repository.track(newEntity);
 
                 Scheduler.runForEntityLater(plugin, player,
                         () -> removeDisplayedMessage(newDisplayedMessage),
@@ -161,6 +180,7 @@ public class MessageStack {
         // Remove all entities in the displayed message
         for (Entity entity : displayedMessage.entities) {
             unregisterTimer(entity);
+            repository.untrack(entity);
             try {
                 entity.remove();
             } catch (Exception ignored) {}
