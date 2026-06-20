@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,6 +22,10 @@ public class MessageStackRepository {
     private final ToggleManager toggleManager;
     // Zmiana na ConcurrentHashMap dla thread-safety
     private final Map<UUID, MessageStack> playersStacks = new ConcurrentHashMap<>();
+    // UUID wszystkich encji aktualnie zarządzanych przez plugin (żywe wiadomości).
+    // Pozwala odróżnić nasze encje od osieroconych "duchów" z poprzedniej sesji
+    // przy czyszczeniu region-bezpiecznym na Folii (patrz EntityCleanupListener).
+    private final Set<UUID> trackedEntityIds = ConcurrentHashMap.newKeySet();
 
     public MessageStackRepository(MessagesOnHeadPlugin plugin, ToggleManager toggleManager) {
         this.plugin = plugin;
@@ -28,8 +33,23 @@ public class MessageStackRepository {
     }
 
     public MessageStack getMessageStack(Player player) {
-        return playersStacks.computeIfAbsent(player.getUniqueId(), 
-            uuid -> new MessageStack(player, plugin, toggleManager));
+        return playersStacks.computeIfAbsent(player.getUniqueId(),
+            uuid -> new MessageStack(player, plugin, toggleManager, this));
+    }
+
+    /** Oznacza encję jako zarządzaną przez plugin. */
+    public void track(Entity entity) {
+        trackedEntityIds.add(entity.getUniqueId());
+    }
+
+    /** Usuwa encję z listy zarządzanych. */
+    public void untrack(Entity entity) {
+        trackedEntityIds.remove(entity.getUniqueId());
+    }
+
+    /** Czy encja jest aktualnie żywą encją pluginu. */
+    public boolean isTracked(UUID entityId) {
+        return trackedEntityIds.contains(entityId);
     }
 
     public void resetPlayerMessageStack(Player player) {
@@ -46,10 +66,13 @@ public class MessageStackRepository {
     }
 
     public void cleanUp() {
-        // Najpierw wyczyść wszystkie stacki
+        // Najpierw wyczyść wszystkie stacki.
+        // requestCleanup() planuje usuwanie na regionie właściwego gracza, dzięki czemu
+        // listy encji każdego stacku tykane są wyłącznie z wątku regionu tego gracza
+        // (a nie z wątku komendy /reload) - to eliminuje wyścig na Folii.
         for (Map.Entry<UUID, MessageStack> entry : playersStacks.entrySet()) {
             try {
-                entry.getValue().deleteAllRelatedEntities();
+                entry.getValue().requestCleanup();
             } catch (Exception ignored) {}
         }
         playersStacks.clear();
@@ -84,10 +107,10 @@ public class MessageStackRepository {
      * Asynchroniczny cleanup dla dużych serwerów - nie blokuje głównego wątku przy szukaniu
      */
     public void cleanUpAsync() {
-        // Najpierw synchronicznie wyczyść stacki (szybkie)
+        // Wyczyść stacki region-bezpiecznie (patrz uwaga w cleanUp()).
         for (Map.Entry<UUID, MessageStack> entry : playersStacks.entrySet()) {
             try {
-                entry.getValue().deleteAllRelatedEntities();
+                entry.getValue().requestCleanup();
             } catch (Exception ignored) {}
         }
         playersStacks.clear();
