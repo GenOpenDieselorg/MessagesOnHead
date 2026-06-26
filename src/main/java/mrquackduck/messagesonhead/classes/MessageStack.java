@@ -155,7 +155,7 @@ public class MessageStack {
                 entities.addAll(newEntities);
                 for (Entity newEntity : newEntities) repository.track(newEntity);
 
-                Scheduler.runForEntityLater(plugin, player,
+                Scheduler.runForEntityLater(plugin, newEntities.get(0),
                         () -> removeDisplayedMessage(newDisplayedMessage),
                         Math.round(secondsToExist * 20) + 2);
         });
