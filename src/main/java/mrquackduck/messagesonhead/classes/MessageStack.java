@@ -139,8 +139,8 @@ public class MessageStack {
                         middleEntityHeight = config.gapAboveHead();
                     }
 
-                    final var middleEntity = spawnMiddleEntity(middleEntityHeight, toggledOffPlayers);
-                    final var textDisplay = spawnTextDisplay(player.getLocation(), line, secondsToExist, needToShowTimer, toggledOffPlayers);
+                    final var middleEntity = spawnMiddleEntity(middleEntityHeight);
+                    final var textDisplay = spawnTextDisplay(player.getLocation(), line, secondsToExist, needToShowTimer);
                     middleEntity.addPassenger(textDisplay);
                     currentEntityToSitOn.addPassenger(middleEntity);
 
@@ -149,6 +149,11 @@ public class MessageStack {
 
                     currentEntityToSitOn = textDisplay;
                 }
+
+                // Ukryj całą wiadomość przed graczami z wyłączonym widokiem jednym
+                // zadaniem na widza (zamiast osobnego zadania na każdą encję) - drastycznie
+                // mniej dispatchy do schedulera regionu na Folii przy dużej liczbie graczy toggle-off.
+                hideMessageFromToggledOffViewers(newEntities, toggledOffPlayers);
 
                 DisplayedMessage newDisplayedMessage = new DisplayedMessage(newEntities);
                 displayedMessages.add(newDisplayedMessage);
@@ -214,7 +219,7 @@ public class MessageStack {
         player.addPassenger(nextEntity);
     }
 
-    private TextDisplay spawnTextDisplay(Location location, String text, double secondsToExist, boolean showTimer, Set<Player> toggledOffPlayers) {
+    private TextDisplay spawnTextDisplay(Location location, String text, double secondsToExist, boolean showTimer) {
         if (showTimer && !config.isTimerEnabled()) showTimer = false;
         location.setY(location.y() + 50); // Setting higher Y coordinate to prevent the message appearing from bottom
 
@@ -227,9 +232,6 @@ public class MessageStack {
         textDisplay.setShadowed(config.isShadowed());
         textDisplay.setLineWidth(Integer.MAX_VALUE);
         textDisplay.addScoreboardTag(customEntityTag);
-
-        // Użyj przekazanej listy graczy zamiast pobierać ją ponownie
-        hideFromToggledOffViewers(textDisplay, toggledOffPlayers);
 
         var textToBeDisplayed = Component.text(text).color(TextColor.fromHexString(config.textColor()));
         if (config.isPlaceholderApiIntegrationEnabled()) {
@@ -267,7 +269,7 @@ public class MessageStack {
         return text;
     }
 
-    private Entity spawnMiddleEntity(float height, Set<Player> toggledOffPlayers) {
+    private Entity spawnMiddleEntity(float height) {
         var location = player.getLocation();
         location.setY(location.y() + 50); // Setting higher Y coordinate to prevent the message appearing from bottom
 
@@ -278,9 +280,6 @@ public class MessageStack {
         entity.setInvulnerable(true);
         entity.setGravity(false);
         entity.addScoreboardTag(customEntityTag);
-
-        // Użyj przekazanej listy graczy zamiast pobierać ją ponownie
-        hideFromToggledOffViewers(entity, toggledOffPlayers);
 
         return entity;
     }
@@ -301,16 +300,22 @@ public class MessageStack {
         return result;
     }
 
-    private void hideFromToggledOffViewers(Entity entity, Set<Player> toggledOffPlayers) {
+    /**
+     * Ukrywa wszystkie encje danej wiadomości przed graczami z wyłączonym widokiem.
+     * <p>
+     * Jedno zadanie schedulera na widza (a nie na parę encja×widz) i pojedyncze
+     * sprawdzenie permisji na widza - dzięki temu koszt rośnie liniowo z liczbą
+     * graczy toggle-off, a nie z (liczba encji × gracze toggle-off).
+     */
+    private void hideMessageFromToggledOffViewers(List<Entity> messageEntities, Set<Player> toggledOffPlayers) {
         for (Player viewer : toggledOffPlayers) {
             if (Scheduler.isFolia()) {
                 Scheduler.runForEntity(plugin, viewer, () -> {
-                    if (viewer.hasPermission(Permissions.TOGGLE)) {
-                        viewer.hideEntity(plugin, entity);
-                    }
+                    if (!viewer.hasPermission(Permissions.TOGGLE)) return;
+                    for (Entity entity : messageEntities) viewer.hideEntity(plugin, entity);
                 });
             } else if (viewer.hasPermission(Permissions.TOGGLE)) {
-                viewer.hideEntity(plugin, entity);
+                for (Entity entity : messageEntities) viewer.hideEntity(plugin, entity);
             }
         }
     }
