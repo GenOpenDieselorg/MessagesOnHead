@@ -1,4 +1,5 @@
 name: MessagesOnHead
+author: genallthebest
 version: '${project.version}'
 main: mrquackduck.messagesonhead.MessagesOnHeadPlugin
 api-version: '1.21.6'
